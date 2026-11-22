@@ -1,0 +1,819 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verified Meal Summary</title>
+    <link rel="stylesheet" href="meal-summary.css">
+    <style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 30px;
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    color: #1f2937;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+header h1 {
+    margin-bottom: 5px;
+}
+
+header p {
+    color: #64748b;
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: white;
+    padding: 22px;
+    border-radius: 10px;
+    border-left: 5px solid #2563eb;
+}
+
+.stat-card span {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.stat-card h2 {
+    font-size: 28px;
+    margin-bottom: 0;
+}
+
+#statusMessage {
+    color: #64748b;
+    margin: 15px 0;
+}
+
+.table-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+
+.table-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 650px;
+}
+
+th, td {
+    padding: 16px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+}
+
+thead th {
+    background: #1e293b;
+    color: white;
+}
+
+tbody th {
+    text-align: left;
+    background: #f8fafc;
+}
+
+tbody td {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+tbody tr:hover {
+    background: #f0f9ff;
+}
+
+tfoot th {
+    background: #dbeafe;
+    color: #1e40af;
+    font-weight: bold;
+}
+
+tfoot th:last-child {
+    background: #2563eb;
+    color: white;
+    font-size: 18px;
+}
+
+@media(max-width: 700px) {
+
+    body {
+        padding: 15px;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    header {
+        align-items: flex-start;
+        gap: 10px;
+        flex-direction: column;
+    }
+
+    .table-card {
+        padding: 15px;
+    }
+
+}
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <div>
+            <h1>Verified Meal Summary</h1>
+            <p>Weekly meal quantity based on verified students</p>
+        </div>
+
+        <button onclick="loadSummary()">↻ Refresh</button>
+    </header>
+
+    <!-- SUMMARY CARDS -->
+    <section class="stats">
+
+        <div class="stat-card">
+            <span>Verified Students</span>
+            <h2 id="studentCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+            <span>Total Meal Portions</span>
+            <h2 id="grandTotal">0</h2>
+        </div>
+
+        <div class="stat-card">
+            <span>Most Popular Session</span>
+            <h2 id="popularSession">-</h2>
+        </div>
+
+    </section>
+
+    <!-- STATUS -->
+    <div id="statusMessage">Loading meal summary...</div>
+
+    <!-- WEEKLY TABLE -->
+    <section class="table-card">
+
+        <h2>Weekly Meal Distribution</h2>
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Breakfast<br>(Pagi)</th>
+                        <th>Lunch<br>(Tengahari)</th>
+                        <th>Evening<br>(Petang)</th>
+                        <th>Daily Total</th>
+                    </tr>
+                </thead>
+
+                <tbody id="summaryBody"></tbody>
+
+                <tfoot>
+                    <tr>
+                        <th>Session Total</th>
+                        <th id="totalPagi">0</th>
+                        <th id="totalTengahari">0</th>
+                        <th id="totalPetang">0</th>
+                        <th id="weeklyTotal">0</th>
+                    </tr>
+                </tfoot>
+
+            </table>
+
+        </div>
+
+    </section>
+
+    <div class="summary-section">
+    <h2>Verified Students – Meal Summary</h2>
+
+    <div class="summary-cards">
+        <div class="summary-card">
+            <span>Verified Students</span>
+            <h2 id="verifiedStudents">0</h2>
+        </div>
+
+        <div class="summary-card">
+            <span>Total Meals</span>
+            <h2 id="grandTotal">0</h2>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Breakfast</th>
+                    <th>Lunch</th>
+                    <th>Evening</th>
+                    <th>Daily Total</th>
+                </tr>
+            </thead>
+            <tbody id="mealSummaryBody"></tbody>
+            <tfoot id="mealSummaryFoot"></tfoot>
+        </table>
+    </div>
+</div>
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbxa6XcIpAwlDXcQSnIl4gN3rBxDamuzHRQ1O80XAd8alYxfZxh3yxSY6fSbBq2B3nG3/exec?sheet=";
+
+
+// MEAL SESSION STRUCTURE
+const mealDays = [
+    {
+        day: "Monday",
+        sessions: ["MonPagi", "MonTengahari", "MonPetang"]
+    },
+    {
+        day: "Tuesday",
+        sessions: ["TuePagi", "TueTengahari", "TuePetang"]
+    },
+    {
+        day: "Wednesday",
+        sessions: ["WedPagi", "WedTengahari", "WedPetang"]
+    },
+    {
+        day: "Thursday",
+        sessions: ["ThuPagi", "ThuTengahari", "ThuPetang"]
+    },
+    {
+        day: "Friday",
+        sessions: ["FriPagi", "FriTengahari", "FriPetang"]
+    },
+    {
+        day: "Saturday",
+        sessions: ["SatPagi", "SatTengahari", "SatPetang"]
+    },
+    {
+        day: "Sunday",
+        sessions: ["SunPagi", "SunTengahari", "SunPetang"]
+    }
+];
+
+
+// NORMALIZE MATRIK NUMBER
+function normalizeMatrik(value) {
+
+    return String(value || "")
+        .trim()
+        .replace(/\s+/g, "")
+        .toUpperCase();
+
+}
+
+
+// PARSE TIMESTAMP
+function parseTimestamp(value) {
+
+    if (typeof value === "number") {
+        return value;
+    }
+
+    const date = new Date(value).getTime();
+
+    return isNaN(date) ? -Infinity : date;
+
+}
+
+
+// CHECK VERIFIED STATUS
+function isVerified(row) {
+
+    const status = String(row["Status"] || "").trim();
+
+    if (/\bnot\s+verified\b|\bunverified\b/i.test(status)) {
+        return false;
+    }
+
+    return /\bverified\b/i.test(status);
+
+}
+
+
+// CHECK TRUE VALUE
+function isSelected(value) {
+
+    return value === true ||
+        String(value).trim().toLowerCase() === "true";
+
+}
+
+
+// FETCH GOOGLE SHEET JSON
+async function getSheet(sheetName) {
+
+    const response = await fetch(
+        API_URL + encodeURIComponent(sheetName)
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to load " + sheetName);
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+        throw new Error(data.message || "Invalid JSON response");
+    }
+
+    return data;
+
+}
+
+
+// GET LATEST SUBMISSION PER MATRIK
+function getLatestVerifiedUUIDs(submissions) {
+
+    const latestMap = new Map();
+
+    submissions.forEach((row, index) => {
+
+        const matrik = normalizeMatrik(row["Matrik Number"]);
+
+        if (!matrik) return;
+
+        const timestamp = parseTimestamp(row["Timestamp"]);
+
+        const existing = latestMap.get(matrik);
+
+        if (
+            !existing ||
+            timestamp > existing.timestamp ||
+            (
+                timestamp === existing.timestamp &&
+                index > existing.index
+            )
+        ) {
+
+            latestMap.set(matrik, {
+                row: row,
+                timestamp: timestamp,
+                index: index
+            });
+
+        }
+
+    });
+
+
+    // ONLY LATEST VERIFIED UUIDS
+    const verifiedUUIDs = new Set();
+
+    latestMap.forEach(item => {
+
+        const row = item.row;
+
+        if (isVerified(row)) {
+
+            const uuid = String(row["UUID"] || "").trim();
+
+            if (uuid) {
+                verifiedUUIDs.add(uuid);
+            }
+
+        }
+
+    });
+
+    return verifiedUUIDs;
+
+}
+
+
+// MAIN FUNCTION
+async function loadSummary() {
+
+    const status = document.getElementById("statusMessage");
+
+    status.textContent = "Calculating verified meal selections...";
+
+    try {
+
+        // FETCH BOTH SHEETS
+        const [submissions, mealSelections] = await Promise.all([
+
+            getSheet("Submission_Log"),
+
+            getSheet("Meal_Selection")
+
+        ]);
+
+
+        // GET VALID VERIFIED UUIDS
+        const verifiedUUIDs =
+            getLatestVerifiedUUIDs(submissions);
+
+
+        // REMOVE DUPLICATE MEAL RECORDS BY UUID
+        const uniqueMeals = new Map();
+
+        mealSelections.forEach(row => {
+
+            const uuid = String(row["UUID"] || "").trim();
+
+            if (!uuid || !verifiedUUIDs.has(uuid)) {
+                return;
+            }
+
+            // One meal record per UUID.
+            // If duplicates exist, keep the last record.
+            uniqueMeals.set(uuid, row);
+
+        });
+
+
+        // INITIALIZE TOTALS
+        const sessionTotals = [0, 0, 0];
+
+        let grandTotal = 0;
+
+        const summary = [];
+
+
+        // COUNT EACH DAY AND SESSION
+        mealDays.forEach(day => {
+
+            const dayTotals = [0, 0, 0];
+
+            uniqueMeals.forEach(row => {
+
+                day.sessions.forEach((session, index) => {
+
+                    if (isSelected(row[session])) {
+
+                        dayTotals[index]++;
+
+                    }
+
+                });
+
+            });
+
+
+            // DAILY TOTAL
+            const dailyTotal = dayTotals.reduce(
+                (sum, value) => sum + value,
+                0
+            );
+
+
+            // ADD SESSION TOTALS
+            dayTotals.forEach((value, index) => {
+
+                sessionTotals[index] += value;
+
+            });
+
+
+            grandTotal += dailyTotal;
+
+
+            summary.push({
+
+                day: day.day,
+
+                pagi: dayTotals[0],
+
+                tengahari: dayTotals[1],
+
+                petang: dayTotals[2],
+
+                total: dailyTotal
+
+            });
+
+        });
+
+
+        // DISPLAY RESULTS
+        displaySummary(
+            summary,
+            sessionTotals,
+            grandTotal,
+            uniqueMeals.size
+        );
+
+
+        status.textContent =
+            "Successfully calculated meal selections from " +
+            uniqueMeals.size +
+            " verified student UUIDs.";
+
+    } catch (error) {
+
+        status.textContent = "Error: " + error.message;
+
+        console.error(error);
+
+    }
+
+}
+
+
+// DISPLAY SUMMARY TABLE
+function displaySummary(
+    summary,
+    sessionTotals,
+    grandTotal,
+    studentCount
+) {
+
+    const tbody = document.getElementById("summaryBody");
+
+    tbody.innerHTML = "";
+
+
+    summary.forEach(item => {
+
+        const tr = document.createElement("tr");
+
+        const values = [
+            item.day,
+            item.pagi,
+            item.tengahari,
+            item.petang,
+            item.total
+        ];
+
+        values.forEach((value, index) => {
+
+            const cell = document.createElement(
+                index === 0 ? "th" : "td"
+            );
+
+            cell.textContent = value;
+
+            tr.appendChild(cell);
+
+        });
+
+        tbody.appendChild(tr);
+
+    });
+
+
+    // FOOTER TOTALS
+    document.getElementById("totalPagi").textContent =
+        sessionTotals[0];
+
+    document.getElementById("totalTengahari").textContent =
+        sessionTotals[1];
+
+    document.getElementById("totalPetang").textContent =
+        sessionTotals[2];
+
+    document.getElementById("weeklyTotal").textContent =
+        grandTotal;
+
+
+    // SUMMARY CARDS
+    document.getElementById("studentCount").textContent =
+        studentCount;
+
+    document.getElementById("grandTotal").textContent =
+        grandTotal;
+
+
+    // MOST POPULAR SESSION
+    const sessionNames = [
+        "Breakfast",
+        "Lunch",
+        "Evening"
+    ];
+
+    const max = Math.max(...sessionTotals);
+
+    const popularIndex = sessionTotals.indexOf(max);
+
+    document.getElementById("popularSession").textContent =
+        max > 0 ? sessionNames[popularIndex] : "-";
+
+}
+
+
+// INITIAL LOAD
+loadSummary();
+
+
+
+//add new
+
+const API =
+    "https://script.google.com/macros/s/AKfycbxa6XcIpAwlDXcQSnIl4gN3rBxDamuzHRQ1O80XAd8alYxfZxh3yxSY6fSbBq2B3nG3/exec?sheet=";
+
+const days = [
+    { name: "Monday", keys: ["MonPagi", "MonTengahari", "MonPetang"] },
+    { name: "Tuesday", keys: ["TuePagi", "TueTengahari", "TuePetang"] },
+    { name: "Wednesday", keys: ["WedPagi", "WedTengahari", "WedPetang"] },
+    { name: "Thursday", keys: ["ThuPagi", "ThuTengahari", "ThuPetang"] },
+    { name: "Friday", keys: ["FriPagi", "FriTengahari", "FriPetang"] },
+    { name: "Saturday", keys: ["SatPagi", "SatTengahari", "SatPetang"] },
+    { name: "Sunday", keys: ["SunPagi", "SunTengahari", "SunPetang"] }
+];
+
+// Recognise selected checkboxes
+function isSelected(value) {
+    return value === true ||
+        String(value).trim().toLowerCase() === "true";
+}
+
+async function loadMealSummary() {
+    try {
+        const [proofResponse, mealResponse] = await Promise.all([
+            fetch(API + encodeURIComponent("Payment_Proof")),
+            fetch(API + encodeURIComponent("Meal_Selection"))
+        ]);
+
+        if (!proofResponse.ok || !mealResponse.ok) {
+            throw new Error("Unable to fetch spreadsheet data.");
+        }
+
+        const proofData = await proofResponse.json();
+        const mealData = await mealResponse.json();
+
+        // 1. Get UUIDs with Verified status from Payment_Proof
+        const verifiedUUIDs = new Set(
+            proofData
+                .filter(row =>
+                    String(row["Status"] || "").trim().toLowerCase()
+                    === "verified"
+                )
+                .map(row => String(row["UUID"] || "").trim())
+                .filter(uuid => uuid !== "")
+        );
+
+        // 2. Keep only Meal_Selection records with verified UUIDs
+        const verifiedMeals = mealData.filter(row => {
+            const uuid = String(row["UUID"] || "").trim();
+            return uuid && verifiedUUIDs.has(uuid);
+        });
+
+        // 3. Calculate totals
+        const summary = days.map(day => {
+            const breakfast = verifiedMeals.reduce(
+                (total, row) =>
+                    total + (isSelected(row[day.keys[0]]) ? 1 : 0),
+                0
+            );
+
+            const lunch = verifiedMeals.reduce(
+                (total, row) =>
+                    total + (isSelected(row[day.keys[1]]) ? 1 : 0),
+                0
+            );
+
+            const evening = verifiedMeals.reduce(
+                (total, row) =>
+                    total + (isSelected(row[day.keys[2]]) ? 1 : 0),
+                0
+            );
+
+            return {
+                day: day.name,
+                breakfast,
+                lunch,
+                evening,
+                dailyTotal: breakfast + lunch + evening
+            };
+        });
+
+        // 4. Calculate weekly session totals
+        const breakfastTotal = summary.reduce(
+            (sum, day) => sum + day.breakfast, 0
+        );
+
+        const lunchTotal = summary.reduce(
+            (sum, day) => sum + day.lunch, 0
+        );
+
+        const eveningTotal = summary.reduce(
+            (sum, day) => sum + day.evening, 0
+        );
+
+        const grandTotal =
+            breakfastTotal + lunchTotal + eveningTotal;
+
+        // 5. Update summary cards
+        document.getElementById("verifiedStudents").textContent =
+            verifiedMeals.length;
+
+        document.getElementById("grandTotal").textContent =
+            grandTotal;
+
+        // 6. Display daily totals
+        const tbody = document.getElementById("mealSummaryBody");
+        const tfoot = document.getElementById("mealSummaryFoot");
+
+        tbody.innerHTML = "";
+        tfoot.innerHTML = "";
+
+        summary.forEach(day => {
+            const tr = document.createElement("tr");
+
+            [
+                day.day,
+                day.breakfast,
+                day.lunch,
+                day.evening,
+                day.dailyTotal
+            ].forEach(value => {
+                const td = document.createElement("td");
+                td.textContent = value;
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+        });
+
+        // 7. Display session totals
+        const totalRow = document.createElement("tr");
+
+        [
+            "SESSION TOTAL",
+            breakfastTotal,
+            lunchTotal,
+            eveningTotal,
+            grandTotal
+        ].forEach(value => {
+            const td = document.createElement("td");
+            td.textContent = value;
+            totalRow.appendChild(td);
+        });
+
+        tfoot.appendChild(totalRow);
+
+        console.log("Verified UUIDs:", [...verifiedUUIDs]);
+        console.log("Verified meal records:", verifiedMeals);
+
+    } catch (error) {
+        console.error("Meal summary error:", error);
+        alert("Unable to load meal summary: " + error.message);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadMealSummary);
+
+
+</script>
+
+</body>
+</html>

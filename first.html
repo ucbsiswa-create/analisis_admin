@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google Sheets Dashboard</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 30px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+}
+
+h2 {
+    color: #222;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+select, input, button {
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+select, input {
+    border: 1px solid #ccc;
+}
+
+select {
+    width: 220px;
+}
+
+input {
+    flex: 1;
+    width: 100%;
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.search {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#status {
+    color: #666;
+    margin: 15px 0;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background: #2563eb;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+@media(max-width: 600px) {
+    .controls, .search {
+        flex-direction: column;
+    }
+
+    select {
+        width: 100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>Google Sheets Dashboard</h2>
+    <p>Select a database to view its records.</p>
+
+    <!-- SHEET SELECTION -->
+    <div class="controls">
+
+        <select id="sheetSelect">
+            <option value="Student_Info">Student Info</option>
+            <option value="Submission_Log">Submission Log</option>
+            <option value="Meal_Selection">Meal Selection</option>
+            <option value="Payment_Proof">Payment Proof</option>
+        </select>
+
+        <button onclick="loadSheet()">Load Data</button>
+
+    </div>
+
+    <!-- UNIVERSAL SEARCH -->
+    <div class="search">
+
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search anything..."
+            oninput="searchData()"
+            disabled
+        >
+
+        <button onclick="clearSearch()">Clear</button>
+
+    </div>
+
+    <!-- STATUS -->
+    <div id="status">Please select a sheet.</div>
+
+    <!-- DATA TABLE -->
+    <div class="table-container">
+        <table id="dataTable"></table>
+    </div>
+
+</div>
+
+
+<script>
+
+// GOOGLE APPS SCRIPT API
+const API_URL = "https://script.google.com/macros/s/AKfycbxa6XcIpAwlDXcQSnIl4gN3rBxDamuzHRQ1O80XAd8alYxfZxh3yxSY6fSbBq2B3nG3/exec?sheet=";
+
+
+// STORE JSON DATA
+let originalData = [];
+
+
+// LOAD SELECTED SHEET
+async function loadSheet() {
+
+    const sheetName = document.getElementById("sheetSelect").value;
+    const status = document.getElementById("status");
+    const searchInput = document.getElementById("searchInput");
+    const table = document.getElementById("dataTable");
+
+    status.textContent = "Loading data...";
+    table.innerHTML = "";
+    searchInput.value = "";
+    searchInput.disabled = true;
+    originalData = [];
+
+    try {
+
+        const response = await fetch(
+            API_URL + encodeURIComponent(sheetName)
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP error: " + response.status);
+        }
+
+        // RECEIVE JSON
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+            throw new Error(data.message || "Invalid JSON response");
+        }
+
+        // STORE DATA
+        originalData = data;
+
+        if (data.length === 0) {
+            status.textContent = "No records found.";
+            return;
+        }
+
+        searchInput.disabled = false;
+
+        // DISPLAY DATA
+        displayTable(data);
+
+        status.textContent =
+            "Loaded " + data.length + " records from " + sheetName;
+
+    } catch (error) {
+
+        status.textContent = "Error: " + error.message;
+
+        console.error(error);
+
+    }
+
+}
+
+
+// UNIVERSAL SEARCH
+function searchData() {
+
+    const keyword = document
+        .getElementById("searchInput")
+        .value
+        .toLowerCase()
+        .trim();
+
+    const filteredData = originalData.filter(row => {
+
+        return Object.values(row).some(value =>
+
+            String(value ?? "")
+                .toLowerCase()
+                .includes(keyword)
+
+        );
+
+    });
+
+    displayTable(filteredData);
+
+    document.getElementById("status").textContent =
+        "Found " + filteredData.length +
+        " of " + originalData.length + " records.";
+
+}
+
+
+// DISPLAY TABLE
+function displayTable(data) {
+
+    const table = document.getElementById("dataTable");
+
+    if (data.length === 0) {
+
+        table.innerHTML =
+            "<tbody><tr><td>No matching records found.</td></tr></tbody>";
+
+        return;
+    }
+
+    const headers = Object.keys(originalData[0]);
+
+    let html = "<thead><tr>";
+
+    headers.forEach(header => {
+        html += "<th>" + escapeHTML(header) + "</th>";
+    });
+
+    html += "</tr></thead><tbody>";
+
+    data.forEach(row => {
+
+        html += "<tr>";
+
+        headers.forEach(header => {
+
+            html += "<td>" +
+                escapeHTML(row[header] ?? "") +
+                "</td>";
+
+        });
+
+        html += "</tr>";
+
+    });
+
+    html += "</tbody>";
+
+    table.innerHTML = html;
+
+}
+
+
+// CLEAR SEARCH
+function clearSearch() {
+
+    document.getElementById("searchInput").value = "";
+
+    searchData();
+
+}
+
+
+// ESCAPE HTML
+function escapeHTML(value) {
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+</script>
+
+</body>
+</html>

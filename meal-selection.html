@@ -1,0 +1,601 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Verified Student Meal Selection</title>
+
+    <link rel="stylesheet" href="meal-selection.css">
+    <style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 30px;
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    color: #1f2937;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+header h1 {
+    margin-bottom: 5px;
+}
+
+header p {
+    color: #64748b;
+}
+
+.back-btn {
+    background: #334155;
+    color: white;
+    text-decoration: none;
+    padding: 11px 15px;
+    border-radius: 7px;
+    font-size: 14px;
+}
+
+.student-card {
+    background: white;
+    border-radius: 12px;
+    padding: 22px;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.student-card span,
+.summary-card span {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.student-card h2 {
+    font-size: 22px;
+    margin-bottom: 0;
+}
+
+.student-card p {
+    overflow-wrap: anywhere;
+}
+
+.verified-status {
+    display: inline-block;
+    background: #dcfce7;
+    color: #15803d;
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.summary-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    display: flex;
+    gap: 70px;
+    margin-bottom: 25px;
+}
+
+.summary-card h2 {
+    font-size: 30px;
+    margin: 10px 0 0;
+}
+
+.meal-section {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+}
+
+.meal-section h2 {
+    margin-top: 0;
+}
+
+.meal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.day-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 17px;
+}
+
+.day-card h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 10px;
+}
+
+.meal-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    color: #166534;
+    font-size: 14px;
+}
+
+.meal-check {
+    background: #dcfce7;
+    color: #15803d;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: bold;
+}
+
+.no-meals {
+    padding: 25px;
+    text-align: center;
+    background: #f8fafc;
+    border-radius: 8px;
+    color: #64748b;
+}
+
+#message {
+    color: #dc2626;
+    margin-top: 20px;
+}
+
+@media(max-width: 700px) {
+
+    body {
+        padding: 15px;
+    }
+
+    header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .student-card {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-card {
+        gap: 30px;
+    }
+
+    .meal-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <div>
+            <h1>Student Meal Selection</h1>
+            <p>Verified registration meal details</p>
+        </div>
+
+        <a href="second.html" class="back-btn">
+            ← Back to Submission Log
+        </a>
+    </header>
+
+    <!-- STUDENT INFORMATION -->
+    <section class="student-card">
+
+        <div>
+            <span>Matrik Number</span>
+            <h2 id="matrik">Loading...</h2>
+        </div>
+
+        <div>
+            <span>UUID</span>
+            <p id="uuid">Loading...</p>
+        </div>
+
+        <div>
+            <span>Submission Status</span>
+            <p id="verificationStatus">
+                Checking...
+            </p>
+        </div>
+
+    </section>
+
+    <!-- SUMMARY -->
+    <section class="summary-card">
+
+        <div>
+            <span>Total Selected Meals</span>
+            <h2 id="totalMeals">0</h2>
+        </div>
+
+        <div>
+            <span>Selected Days</span>
+            <h2 id="totalDays">0</h2>
+        </div>
+
+    </section>
+
+    <!-- MEAL SELECTION -->
+    <section class="meal-section">
+
+        <h2>Selected Meal Schedule</h2>
+
+        <div id="mealContainer">
+            <p>Loading meal selections...</p>
+        </div>
+
+    </section>
+
+    <p id="message"></p>
+
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbxa6XcIpAwlDXcQSnIl4gN3rBxDamuzHRQ1O80XAd8alYxfZxh3yxSY6fSbBq2B3nG3/exec?sheet=";
+
+
+// UUID PASSED FROM PREVIOUS PAGE
+const params = new URLSearchParams(window.location.search);
+
+const currentUUID = (params.get("uuid") || "").trim();
+
+
+// MEAL STRUCTURE
+const mealDays = [
+    {
+        day: "Monday",
+        fields: [
+            ["MonPagi", "Breakfast"],
+            ["MonTengahari", "Lunch"],
+            ["MonPetang", "Evening"]
+        ]
+    },
+    {
+        day: "Tuesday",
+        fields: [
+            ["TuePagi", "Breakfast"],
+            ["TueTengahari", "Lunch"],
+            ["TuePetang", "Evening"]
+        ]
+    },
+    {
+        day: "Wednesday",
+        fields: [
+            ["WedPagi", "Breakfast"],
+            ["WedTengahari", "Lunch"],
+            ["WedPetang", "Evening"]
+        ]
+    },
+    {
+        day: "Thursday",
+        fields: [
+            ["ThuPagi", "Breakfast"],
+            ["ThuTengahari", "Lunch"],
+            ["ThuPetang", "Evening"]
+        ]
+    },
+    {
+        day: "Friday",
+        fields: [
+            ["FriPagi", "Breakfast"],
+            ["FriTengahari", "Lunch"],
+            ["FriPetang", "Evening"]
+        ]
+    },
+    {
+        day: "Saturday",
+        fields: [
+            ["SatPagi", "Breakfast"],
+            ["SatTengahari", "Lunch"],
+            ["SatPetang", "Evening"]
+        ]
+    },
+    {
+        day: "Sunday",
+        fields: [
+            ["SunPagi", "Breakfast"],
+            ["SunTengahari", "Lunch"],
+            ["SunPetang", "Evening"]
+        ]
+    }
+];
+
+
+// NORMALIZE MATRIK NUMBER
+function normalizeMatrik(value) {
+
+    return String(value || "")
+        .trim()
+        .replace(/\s+/g, "")
+        .toUpperCase();
+
+}
+
+
+// PARSE TIMESTAMP
+function parseTimestamp(value) {
+
+    if (typeof value === "number") {
+        return value;
+    }
+
+    const result = new Date(value).getTime();
+
+    return isNaN(result) ? -Infinity : result;
+
+}
+
+
+// VERIFY STATUS
+function isVerified(row) {
+
+    const status = String(row["Status"] || "").trim();
+
+    if (/\bnot\s+verified\b|\bunverified\b/i.test(status)) {
+        return false;
+    }
+
+    return /\bverified\b/i.test(status);
+
+}
+
+
+// FETCH SHEET DATA AS JSON
+async function getSheet(sheetName) {
+
+    const response = await fetch(
+        API_URL + encodeURIComponent(sheetName)
+    );
+
+    if (!response.ok) {
+        throw new Error("Unable to fetch " + sheetName);
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+        throw new Error(data.message || "Invalid JSON response");
+    }
+
+    return data;
+
+}
+
+
+// CHECK TRUE VALUE
+function isSelected(value) {
+
+    return value === true ||
+        String(value).trim().toLowerCase() === "true";
+
+}
+
+
+// MAIN FUNCTION
+async function loadMealSelection() {
+
+    const message = document.getElementById("message");
+
+    try {
+
+        if (!currentUUID) {
+            throw new Error("UUID not found in URL.");
+        }
+
+        document.getElementById("uuid").textContent = currentUUID;
+
+        // FETCH BOTH SHEETS
+        const [submissionData, mealData] = await Promise.all([
+            getSheet("Submission_Log"),
+            getSheet("Meal_Selection")
+        ]);
+
+
+        // FIND LATEST SUBMISSION FOR EACH MATRIK
+        const latestMap = new Map();
+
+        submissionData.forEach((row, index) => {
+
+            const matrik = normalizeMatrik(row["Matrik Number"]);
+
+            if (!matrik) return;
+
+            const timestamp = parseTimestamp(row["Timestamp"]);
+
+            const existing = latestMap.get(matrik);
+
+            if (
+                !existing ||
+                timestamp > existing.timestamp ||
+                (
+                    timestamp === existing.timestamp &&
+                    index > existing.index
+                )
+            ) {
+
+                latestMap.set(matrik, {
+                    row: row,
+                    timestamp: timestamp,
+                    index: index
+                });
+
+            }
+
+        });
+
+
+        // CHECK UUID BELONGS TO LATEST VERIFIED SUBMISSION
+        let verifiedSubmission = null;
+
+        for (const item of latestMap.values()) {
+
+            const row = item.row;
+
+            const rowUUID = String(row["UUID"] || "").trim();
+
+            if (rowUUID === currentUUID && isVerified(row)) {
+
+                verifiedSubmission = row;
+                break;
+
+            }
+
+        }
+
+
+        if (!verifiedSubmission) {
+
+            throw new Error(
+                "This UUID does not belong to a latest verified submission."
+            );
+
+        }
+
+
+        // DISPLAY STUDENT INFORMATION
+        document.getElementById("matrik").textContent =
+            normalizeMatrik(verifiedSubmission["Matrik Number"]);
+
+        document.getElementById("verificationStatus").innerHTML =
+            '<span class="verified-status">✓ Verified</span>';
+
+
+        // FIND MEAL RECORD USING UUID
+        const mealRecord = mealData.find(row =>
+            String(row["UUID"] || "").trim() === currentUUID
+        );
+
+
+        if (!mealRecord) {
+
+            throw new Error(
+                "No meal selection found for this UUID."
+            );
+
+        }
+
+
+        // DISPLAY MEAL SELECTIONS
+        displayMeals(mealRecord);
+
+    } catch (error) {
+
+        message.textContent = error.message;
+
+        document.getElementById("mealContainer").innerHTML = "";
+
+        console.error(error);
+
+    }
+
+}
+
+
+// DISPLAY SELECTED MEALS
+function displayMeals(record) {
+
+    const container = document.getElementById("mealContainer");
+
+    let totalMeals = 0;
+    let totalDays = 0;
+
+    let html = '<div class="meal-grid">';
+
+    mealDays.forEach(day => {
+
+        let dayMeals = "";
+
+        day.fields.forEach(field => {
+
+            const columnName = field[0];
+            const mealName = field[1];
+
+            if (isSelected(record[columnName])) {
+
+                totalMeals++;
+
+                dayMeals += `
+                    <div class="meal-item">
+                        <span class="meal-check">✓</span>
+                        <span>${mealName}</span>
+                    </div>
+                `;
+
+            }
+
+        });
+
+
+        if (dayMeals) {
+
+            totalDays++;
+
+            html += `
+                <div class="day-card">
+                    <h3>${day.day}</h3>
+                    ${dayMeals}
+                </div>
+            `;
+
+        }
+
+    });
+
+    html += '</div>';
+
+
+    if (totalMeals === 0) {
+
+        html = `
+            <div class="no-meals">
+                No meals selected for this student.
+            </div>
+        `;
+
+    }
+
+
+    container.innerHTML = html;
+
+    document.getElementById("totalMeals").textContent = totalMeals;
+
+    document.getElementById("totalDays").textContent = totalDays;
+
+}
+
+
+// START
+loadMealSelection();
+
+</script>
+
+</body>
+</html>

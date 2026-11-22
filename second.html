@@ -1,0 +1,606 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Log Dashboard</title>
+   
+    <style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 30px;
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    color: #1f2937;
+}
+
+.container {
+    max-width: 1500px;
+    margin: auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+header h1 {
+    margin-bottom: 5px;
+}
+
+header p {
+    color: #6b7280;
+}
+
+button {
+    padding: 11px 18px;
+    background: #2563eb;
+    border: none;
+    color: white;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: white;
+    padding: 22px;
+    border-radius: 10px;
+    border-left: 5px solid #64748b;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+
+.stat-card span {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.stat-card h2 {
+    font-size: 30px;
+    margin: 10px 0 0;
+}
+
+.verified-card {
+    border-left-color: #16a34a;
+}
+
+.pending-card {
+    border-left-color: #f59e0b;
+}
+
+.toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+input, select {
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    font-size: 14px;
+    background: white;
+}
+
+input {
+    flex: 1;
+}
+
+#statusMessage {
+    margin: 15px 0;
+    color: #64748b;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    background: white;
+    border-radius: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1100px;
+}
+
+th, td {
+    padding: 13px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 13px;
+}
+
+th {
+    background: #1e293b;
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+tr:hover {
+    background: #f1f5f9;
+}
+
+tr.verified-row {
+    background: #f0fdf4;
+}
+
+tr.verified-row:hover {
+    background: #dcfce7;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.verified {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.not-verified {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.empty {
+    text-align: center;
+    padding: 30px;
+    color: #64748b;
+}
+
+@media(max-width: 700px) {
+    body {
+        padding: 15px;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    header {
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+    }
+}
+
+.view-meals-btn {
+    background: #15803d;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.view-meals-btn:hover {
+    background: #166534;
+}
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header>
+        <div>
+            <h1>Submission Log</h1>
+            <p>Monitor student submissions and verification status.</p>
+        </div>
+
+        <button onclick="loadData()">↻ Refresh</button>
+    </header>
+
+    <!-- SUMMARY -->
+    <section class="stats">
+
+        <div class="stat-card">
+            <span>Total Submissions</span>
+            <h2 id="totalCount">0</h2>
+        </div>
+
+        <div class="stat-card verified-card">
+            <span>Verified</span>
+            <h2 id="verifiedCount">0</h2>
+        </div>
+
+        <div class="stat-card pending-card">
+            <span>Not Verified</span>
+            <h2 id="pendingCount">0</h2>
+        </div>
+
+    </section>
+
+    <!-- FILTERS -->
+    <section class="toolbar">
+
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search Matrik, Invoice, UUID, Phone..."
+            oninput="applyFilters()"
+        >
+
+        <select id="statusFilter" onchange="applyFilters()">
+            <option value="All">All Submissions</option>
+            <option value="Verified">Verified Only</option>
+            <option value="Not Verified">Not Verified</option>
+        </select>
+
+    </section>
+
+    <div id="statusMessage">Loading submissions...</div>
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>UUID</th>
+                    <th>Matrik Number</th>
+                    <th>Invoice Number</th>
+                    <th>Stage</th>
+                    <th>Status</th>
+                    <th>Message</th>
+                    <th>Phone</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="tableBody">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+    
+
+const API_URL = "https://script.google.com/macros/s/AKfycbxa6XcIpAwlDXcQSnIl4gN3rBxDamuzHRQ1O80XAd8alYxfZxh3yxSY6fSbBq2B3nG3/exec?sheet=";
+
+const SHEET_NAME = "Submission_Log";
+
+let allData = [];
+
+
+// 1. NORMALIZE MATRIK NUMBER
+function normalizeMatrik(value) {
+    return String(value || "")
+        .trim()
+        .replace(/\s+/g, "")
+        .toUpperCase();
+}
+
+
+// 2. CONVERT TIMESTAMP TO DATE
+function parseTimestamp(value) {
+
+    if (value instanceof Date) {
+        return value.getTime();
+    }
+
+    if (typeof value === "number") {
+        return value;
+    }
+
+    const date = new Date(value).getTime();
+
+    return isNaN(date) ? -Infinity : date;
+}
+
+
+// 3. CHECK VERIFIED STATUS
+function isVerified(row) {
+
+    const status = String(row["Status"] || "").trim();
+
+    // Exclude Not Verified and Unverified
+    if (/\bnot\s+verified\b|\bunverified\b/i.test(status)) {
+        return false;
+    }
+
+    return /\bverified\b/i.test(status);
+}
+
+
+// 4. GET LATEST SUBMISSION PER MATRIK
+function getLatestSubmissions(data) {
+
+    const latestRecords = new Map();
+    const recordsWithoutMatrik = [];
+
+    data.forEach((row, index) => {
+
+        const matrik = normalizeMatrik(row["Matrik Number"]);
+
+        // Keep rows without Matrik Number individually
+        if (!matrik) {
+            recordsWithoutMatrik.push({
+                ...row,
+                "Matrik Number": ""
+            });
+            return;
+        }
+
+        const timestamp = parseTimestamp(row["Timestamp"]);
+
+        const current = latestRecords.get(matrik);
+
+        if (!current || timestamp >= current.timestamp) {
+
+            latestRecords.set(matrik, {
+                row: {
+                    ...row,
+                    "Matrik Number": matrik
+                },
+                timestamp: timestamp,
+                index: index
+            });
+
+        }
+
+    });
+
+    const result = [
+        ...Array.from(latestRecords.values()).map(item => item.row),
+        ...recordsWithoutMatrik
+    ];
+
+    // Sort newest first
+    result.sort((a, b) =>
+        parseTimestamp(b["Timestamp"]) -
+        parseTimestamp(a["Timestamp"])
+    );
+
+    return result;
+}
+
+
+// 5. LOAD DATA
+async function loadData() {
+
+    const message = document.getElementById("statusMessage");
+
+    message.textContent = "Loading submission records...";
+
+    try {
+
+        const response = await fetch(
+            API_URL + encodeURIComponent(SHEET_NAME)
+        );
+
+        if (!response.ok) {
+            throw new Error("HTTP error: " + response.status);
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+            throw new Error(data.message || "Invalid JSON response");
+        }
+
+        // Keep only latest submission per normalized Matrik
+        allData = getLatestSubmissions(data);
+
+        updateStatistics();
+
+        applyFilters();
+
+    } catch (error) {
+
+        message.textContent = "Error loading data: " + error.message;
+
+        console.error(error);
+
+    }
+}
+
+
+// 6. UPDATE STATISTICS
+function updateStatistics() {
+
+    const total = allData.length;
+
+    const verified = allData.filter(isVerified).length;
+
+    const pending = total - verified;
+
+    document.getElementById("totalCount").textContent = total;
+
+    document.getElementById("verifiedCount").textContent = verified;
+
+    document.getElementById("pendingCount").textContent = pending;
+
+}
+
+
+// 7. UNIVERSAL SEARCH AND FILTER
+function applyFilters() {
+
+    const keyword = document
+        .getElementById("searchInput")
+        .value
+        .toLowerCase()
+        .trim();
+
+    const filter = document.getElementById("statusFilter").value;
+
+    const filtered = allData.filter(row => {
+
+        const matchesSearch = Object.values(row).some(value =>
+            String(value ?? "")
+                .toLowerCase()
+                .includes(keyword)
+        );
+
+        const verified = isVerified(row);
+
+        let matchesStatus = true;
+
+        if (filter === "Verified") {
+            matchesStatus = verified;
+        }
+
+        if (filter === "Not Verified") {
+            matchesStatus = !verified;
+        }
+
+        return matchesSearch && matchesStatus;
+
+    });
+
+    displayTable(filtered);
+
+    document.getElementById("statusMessage").textContent =
+        "Showing " + filtered.length +
+        " of " + allData.length +
+        " latest submissions (one per Matrik Number).";
+
+}
+
+
+// 8. DISPLAY TABLE
+function displayTable(data) {
+
+    const tbody = document.getElementById("tableBody");
+
+    tbody.innerHTML = "";
+
+    if (data.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="empty">
+                    No matching submissions found.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    const columns = [
+        "Timestamp",
+        "UUID",
+        "Matrik Number",
+        "Invoice Number",
+        "Stage",
+        "Status",
+        "Message",
+        "Phone"
+    ];
+
+    data.forEach(row => {
+
+        const verified = isVerified(row);
+
+        const tr = document.createElement("tr");
+
+        if (verified) {
+            tr.classList.add("verified-row");
+        }
+
+        columns.forEach(column => {
+
+            const td = document.createElement("td");
+
+            const value = row[column] ?? "";
+
+            if (column === "Status") {
+
+                const badge = document.createElement("span");
+
+                badge.className = "status-badge " +
+                    (verified ? "verified" : "not-verified");
+
+                badge.textContent = value;
+
+                td.appendChild(badge);
+
+            } else {
+
+                td.textContent = value;
+
+            }
+
+            tr.appendChild(td);
+
+        });
+
+        // ADD AFTER THE EXISTING COLUMN LOOP
+
+const actionTd = document.createElement("td");
+
+if (verified && row["UUID"]) {
+
+    const button = document.createElement("button");
+
+    button.textContent = "View Meals";
+
+    button.className = "view-meals-btn";
+
+    button.onclick = function() {
+
+        const uuid = String(row["UUID"]).trim();
+
+        window.location.href =
+            "meal-selection.html?uuid=" + encodeURIComponent(uuid);
+
+    };
+
+    actionTd.appendChild(button);
+
+} else {
+
+    actionTd.textContent = "Not Available";
+
+}
+
+tr.appendChild(actionTd);
+
+        tbody.appendChild(tr);
+
+    });
+
+}
+
+
+// 9. INITIAL LOAD
+loadData();
+
+
+
+</script>
+
+</body>
+</html>
