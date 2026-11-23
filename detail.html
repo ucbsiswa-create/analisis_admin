@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Proof Dashboard</title>
+   
+    <style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    color: #252b36;
+}
+
+.container {
+    max-width: 1600px;
+    margin: auto;
+    padding: 30px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+header p,
+.table-heading p {
+    color: #737d8c;
+    font-size: 14px;
+}
+
+button {
+    border: none;
+    background: #2563eb;
+    color: white;
+    padding: 11px 18px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: white;
+    padding: 22px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.stat-card span {
+    color: #737d8c;
+    font-size: 14px;
+}
+
+.stat-card h2 {
+    font-size: 30px;
+    margin-top: 12px;
+}
+
+.stat-card.warning {
+    border-left: 4px solid #f59e0b;
+}
+
+.stat-card.warning h2 {
+    color: #d97706;
+}
+
+.table-section {
+    background: white;
+    padding: 24px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.table-heading {
+    margin-bottom: 18px;
+}
+
+.table-heading h2 {
+    margin-bottom: 6px;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 13px 15px;
+    border: 1px solid #dce1e8;
+    border-radius: 7px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    outline: none;
+}
+
+#searchInput:focus {
+    border-color: #2563eb;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1100px;
+}
+
+th {
+    background: #f1f4f8;
+    color: #4b5563;
+    text-align: left;
+    padding: 13px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+td {
+    padding: 13px;
+    border-bottom: 1px solid #edf0f4;
+    font-size: 13px;
+    vertical-align: top;
+    max-width: 350px;
+    overflow-wrap: anywhere;
+}
+
+tr:hover {
+    background: #f8fafc;
+}
+
+.repeat-row {
+    background: #fff8eb;
+}
+
+.repeat-row:hover {
+    background: #fff1d6;
+}
+
+.repeat-badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.normal-badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 12px;
+}
+
+.proof-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.proof-link:hover {
+    text-decoration: underline;
+}
+
+.message {
+    padding: 20px;
+    text-align: center;
+    color: #737d8c;
+}
+
+.error {
+    color: #dc2626;
+    margin-bottom: 12px;
+}
+
+.empty {
+    text-align: center;
+    padding: 30px;
+    color: #737d8c;
+}
+
+@media (max-width: 900px) {
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .container {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 500px) {
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+
+/* Compact toolbar */
+.toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.toolbar input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 13px;
+    border: 1px solid #dce1e8;
+    border-radius: 7px;
+    font-size: 13px;
+}
+
+.toolbar select {
+    min-width: 145px;
+    padding: 10px;
+    border: 1px solid #dce1e8;
+    border-radius: 7px;
+    background: white;
+    font-size: 13px;
+}
+
+table {
+    min-width: 850px;
+}
+
+th {
+    padding: 10px;
+    font-size: 11px;
+}
+
+td {
+    padding: 9px 10px;
+    font-size: 12px;
+}
+
+.summary-row {
+    cursor: pointer;
+}
+
+.summary-row:hover {
+    background: #f1f5f9;
+}
+
+.expand-btn {
+    padding: 5px 9px;
+    font-size: 11px;
+    background: #e8efff;
+    color: #1d4ed8;
+    border-radius: 5px;
+}
+
+.expand-btn:hover {
+    background: #dbe7ff;
+}
+
+.detail-row {
+    display: none;
+    background: #f8fafc;
+}
+
+.detail-row.open {
+    display: table-row;
+}
+
+.detail-container {
+    padding: 15px !important;
+    white-space: normal;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.detail-item {
+    padding: 10px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+}
+
+.detail-label {
+    display: block;
+    font-size: 10px;
+    color: #64748b;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.detail-value {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.status-verified {
+    color: #15803d;
+    background: #dcfce7;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.status-failed {
+    color: #b91c1c;
+    background: #fee2e2;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+@media (max-width: 600px) {
+    .toolbar {
+        flex-direction: column;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.meal-schedule {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.meal-day {
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.meal-day strong {
+    display: block;
+    margin-bottom: 10px;
+    color: #1d4ed8;
+    font-size: 13px;
+}
+
+.meal-slot {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 0;
+    border-top: 1px solid #edf0f4;
+    font-size: 11px;
+}
+
+.meal-slot span:first-child {
+    color: #64748b;
+}
+
+.meal-slot span:last-child {
+    font-weight: 600;
+    text-align: right;
+}
+
+@media (max-width: 600px) {
+    .meal-schedule {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div>
+                <h1>Payment Proof Dashboard</h1>
+                <p>View and monitor all student payment proof submissions.</p>
+            </div>
+            <button id="refreshBtn" onclick="loadPaymentProof()">
+                ↻ Refresh
+            </button>
+        </header>
+
+        <section class="stats">
+            <div class="stat-card">
+                <span>Total Records</span>
+                <h2 id="totalRecords">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <span>Unique Matrik Numbers</span>
+                <h2 id="uniqueMatrik">0</h2>
+            </div>
+
+            <div class="stat-card warning">
+                <span>Repeated Matrik Numbers</span>
+                <h2 id="repeatedMatrik">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <span>Records with Repeated Matrik</span>
+                <h2 id="repeatedRecords">0</h2>
+            </div>
+        </section>
+
+        <section class="table-section">
+            <div class="table-heading">
+                <div>
+                    <h2>All Payment Proof Records</h2>
+                    <p id="recordInfo">Loading records...</p>
+                </div>
+            </div>
+
+           
+<div class="toolbar">
+    <input
+        type="text"
+        id="searchInput"
+        placeholder="Search UUID, Matrik, Invoice, OCR Text..."
+        oninput="displayTable()"
+    >
+
+    <select id="statusFilter" onchange="displayTable()">
+        <option value="All">All Status</option>
+        <option value="Verified">Verified</option>
+        <option value="Failed">Failed</option>
+    </select>
+</div>
+
+
+            <div id="loading" class="message">Loading payment proof records...</div>
+            <div id="error" class="error"></div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="summary-card">
+    <span>total of repeat count</span>
+    <h2 id="totalRepeatCount">0</h2>
+</div>
+        </section>
+    </div>
+
+    <script>
+
+
+const API_URL =
+    "https://script.google.com/macros/s/AKfycbxa6XcIpAwlDXcQSnIl4gN3rBxDamuzHRQ1O80XAd8alYxfZxh3yxSY6fSbBq2B3nG3/exec?sheet=";
+
+let allData = [];
+let matrikCounts = new Map();
+let tableHeaders = [];
+let studentInfo = [];
+let mealSelections = [];
+
+document.addEventListener("DOMContentLoaded", loadPaymentProof);
+
+
+// Normalize Matrik Number
+function normalizeMatrik(value) {
+    return String(value || "")
+        .trim()
+        .replace(/\s+/g, "")
+        .toUpperCase();
+}
+
+
+// Identify verification status from any field
+function getStatus(row) {
+    const status = String(row["Status"] || "")
+        .trim()
+        .toLowerCase();
+
+    if (status === "verified") {
+        return "Verified";
+    }
+
+    if (status === "failed") {
+        return "Failed";
+    }
+
+    return "Unknown";
+}
+
+// Load data
+async function loadPaymentProof() {
+    const loading = document.getElementById("loading");
+    const error = document.getElementById("error");
+
+    loading.style.display = "block";
+    error.textContent = "";
+
+    try {
+        const [
+            proofResponse,
+            studentResponse,
+            mealResponse
+        ] = await Promise.all([
+            fetch(API_URL + encodeURIComponent("Payment_Proof")),
+            fetch(API_URL + encodeURIComponent("Student_Info")),
+            fetch(API_URL + encodeURIComponent("Meal_Selection"))
+        ]);
+
+        if (
+            !proofResponse.ok ||
+            !studentResponse.ok ||
+            !mealResponse.ok
+        ) {
+            throw new Error("Unable to load data.");
+        }
+
+        const proofData = await proofResponse.json();
+        studentInfo = await studentResponse.json();
+        mealSelections = await mealResponse.json();
+
+        if (
+            !Array.isArray(proofData) ||
+            !Array.isArray(studentInfo) ||
+            !Array.isArray(mealSelections)
+        ) {
+            throw new Error("Unexpected API response.");
+        }
+
+        // 1. Map Student_Info by Invoice Number
+        const studentMap = new Map();
+
+        studentInfo.forEach(student => {
+            const invoice = String(student["Invoice Number"] || "")
+                .trim()
+                .toUpperCase();
+
+            if (invoice) {
+                studentMap.set(invoice, student);
+            }
+        });
+
+        // 2. Map Meal_Selection by UUID
+        const mealMap = new Map();
+
+        mealSelections.forEach(meal => {
+            const uuid = String(meal["UUID"] || "")
+                .trim()
+                .toLowerCase();
+
+            if (uuid) {
+                mealMap.set(uuid, meal);
+            }
+        });
+
+        // 3. Attach student information and meal selection
+        allData = proofData.map(row => {
+
+            const invoice = String(row["Invoice Number"] || "")
+                .trim()
+                .toUpperCase();
+
+            const student = studentMap.get(invoice);
+
+            const uuid = String(student?.["UUID"] || "")
+                .trim()
+                .toLowerCase();
+
+            const meal = uuid ? mealMap.get(uuid) : null;
+
+            return {
+                ...row,
+
+                "Name": student?.["Name"] || "-",
+
+                "UUID": student?.["UUID"] || "-",
+
+                "Meal Selection": meal || null
+            };
+        });
+
+        // Keep original headers
+        tableHeaders = proofData.length
+            ? [
+                ...Object.keys(proofData[0]),
+                "Name",
+                "UUID"
+            ]
+            : ["Name", "UUID"];
+
+        calculateMatrikCounts();
+        updateStatistics();
+        displayTable();
+
+        loading.style.display = "none";
+
+    } catch (err) {
+        loading.style.display = "none";
+        error.textContent = "Error: " + err.message;
+        console.error(err);
+    }
+}
+
+// Count repeated Matrik Numbers
+function calculateMatrikCounts() {
+    matrikCounts.clear();
+
+    allData.forEach(row => {
+        const matrik = normalizeMatrik(row["Matrik Number"]);
+
+        if (!matrik) return;
+
+        matrikCounts.set(
+            matrik,
+            (matrikCounts.get(matrik) || 0) + 1
+        );
+    });
+}
+
+
+// Dashboard statistics
+function updateStatistics() {
+    const repeated = [...matrikCounts.values()]
+        .filter(count => count > 1);
+
+    document.getElementById("totalRecords").textContent =
+        allData.length;
+
+    document.getElementById("uniqueMatrik").textContent =
+        matrikCounts.size;
+
+    document.getElementById("repeatedMatrik").textContent =
+        repeated.length;
+
+    document.getElementById("repeatedRecords").textContent =
+        repeated.reduce((sum, count) => sum + count, 0);
+}
+
+
+// Create safe text or URL content
+function createDetailValue(header, value) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "detail-value";
+
+    const text = String(value ?? "");
+
+    if (
+        header.toLowerCase().includes("url") &&
+        /^https:\/\/drive\.google\.com\//i.test(text)
+    ) {
+        const link = document.createElement("a");
+        link.href = text;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.className = "proof-link";
+        link.textContent = "View Payment Proof";
+        wrapper.appendChild(link);
+    } else {
+        wrapper.textContent = text || "-";
+    }
+
+    return wrapper;
+}
+
+function createMealSelectionDetails(meal) {
+
+    const container = document.createElement("div");
+    container.className = "detail-item";
+
+    const label = document.createElement("span");
+    label.className = "detail-label";
+    label.textContent = "Weekly Meal Selection";
+
+    container.appendChild(label);
+
+    if (!meal) {
+        const message = document.createElement("div");
+        message.className = "detail-value";
+        message.textContent = "No meal selection found.";
+
+        container.appendChild(message);
+        return container;
+    }
+
+    const days = [
+        "Mon", "Tue", "Wed", "Thu",
+        "Fri", "Sat", "Sun"
+    ];
+
+    const periods = [
+        { key: "Pagi", label: "Breakfast" },
+        { key: "Tengahari", label: "Lunch" },
+        { key: "Petang", label: "Dinner" }
+    ];
+
+    const schedule = document.createElement("div");
+    schedule.className = "meal-schedule";
+
+    days.forEach(day => {
+
+        const dayCard = document.createElement("div");
+        dayCard.className = "meal-day";
+
+        const dayTitle = document.createElement("strong");
+        dayTitle.textContent = day;
+
+        dayCard.appendChild(dayTitle);
+
+        periods.forEach(period => {
+
+            const key = day + period.key;
+            const rawValue = meal[key];
+
+let value = "-";
+
+if (rawValue === true || String(rawValue).toLowerCase() === "true") {
+    value = "Selected";
+} else if (rawValue === false || String(rawValue).toLowerCase() === "false") {
+    value = "Not Selected";
+} else if (rawValue !== "" && rawValue != null) {
+    value = String(rawValue).trim();
+}
+
+            const item = document.createElement("div");
+            item.className = "meal-slot";
+
+            const slotLabel = document.createElement("span");
+            slotLabel.textContent = period.label;
+
+            const slotValue = document.createElement("span");
+            slotValue.textContent = value || "-";
+
+            item.appendChild(slotLabel);
+            item.appendChild(slotValue);
+
+            dayCard.appendChild(item);
+        });
+
+        schedule.appendChild(dayCard);
+    });
+
+    container.appendChild(schedule);
+
+    return container;
+}
+
+
+// Expand or collapse a record
+function toggleDetails(index) {
+    const detailRow = document.getElementById("detail-" + index);
+    const button = document.getElementById("expand-" + index);
+
+    if (!detailRow || !button) return;
+
+    const isOpen = detailRow.classList.toggle("open");
+
+    button.textContent = isOpen ? "− Collapse" : "+ Expand";
+}
+
+
+// Display table
+function displayTable() {
+    const searchValue = document
+        .getElementById("searchInput")
+        .value.trim().toLowerCase();
+
+    const selectedStatus =
+        document.getElementById("statusFilter").value;
+
+    const head = document.getElementById("tableHead");
+    const body = document.getElementById("tableBody");
+
+    head.innerHTML = "";
+    body.innerHTML = "";
+
+    // Compact table columns
+    const summaryHeaders = [
+    "Name",
+    "Matrik Number",
+    "Invoice Number",
+    "Verification",
+    "Repeat Count",
+    "Details"
+];
+
+    const headerRow = document.createElement("tr");
+
+    summaryHeaders.forEach(header => {
+        const th = document.createElement("th");
+        th.textContent = header;
+        headerRow.appendChild(th);
+    });
+
+    head.appendChild(headerRow);
+
+    // Apply search and status filter
+    const filteredData = allData.filter(row => {
+        const matrik = normalizeMatrik(row["Matrik Number"]);
+        const count = matrikCounts.get(matrik) || 0;
+        const status = getStatus(row);
+
+        const searchableText = [
+            ...tableHeaders.map(key => row[key]),
+            matrik,
+            count,
+            status
+        ].join(" ").toLowerCase();
+
+        const matchesSearch =
+            searchableText.includes(searchValue);
+
+        const matchesStatus =
+            selectedStatus === "All" ||
+            selectedStatus === status;
+
+        return matchesSearch && matchesStatus;
+    });
+
+    // Calculate total repeat count among displayed records
+const totalRepeatCount = filteredData.reduce((total, row) => {
+    const matrik = normalizeMatrik(row["Matrik Number"]);
+    const count = matrikCounts.get(matrik) || 0;
+
+    return total + (count > 1 ? count : 0);
+}, 0);
+
+document.getElementById("totalRepeatCount").textContent =
+    totalRepeatCount;
+
+    document.getElementById("recordInfo").textContent =
+        `Showing ${filteredData.length} of ${allData.length} records`;
+
+    if (filteredData.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+
+        td.colSpan = summaryHeaders.length;
+        td.className = "empty";
+        td.textContent = "No matching records found.";
+
+        tr.appendChild(td);
+        body.appendChild(tr);
+        return;
+    }
+
+    filteredData.forEach((row, index) => {
+        const matrik = normalizeMatrik(row["Matrik Number"]);
+        const count = matrikCounts.get(matrik) || 0;
+        const status = getStatus(row);
+
+        // Main compact row
+        const tr = document.createElement("tr");
+        tr.className = "summary-row";
+
+        if (count > 1) {
+            tr.classList.add("repeat-row");
+        }
+
+        const nameTd = document.createElement("td");
+nameTd.textContent = row["Name"] || "-";
+tr.appendChild(nameTd);
+
+        const matrikTd = document.createElement("td");
+        matrikTd.textContent = matrik || "-";
+        tr.appendChild(matrikTd);
+
+        const invoiceTd = document.createElement("td");
+        invoiceTd.textContent = row["Invoice Number"] || "-";
+        tr.appendChild(invoiceTd);
+
+        const statusTd = document.createElement("td");
+        const statusBadge = document.createElement("span");
+
+        statusBadge.className =
+    status === "Verified"
+        ? "status-verified"
+        : status === "Failed"
+            ? "status-failed"
+            : "";
+
+        statusBadge.textContent = status;
+        statusTd.appendChild(statusBadge);
+        tr.appendChild(statusTd);
+
+        const countTd = document.createElement("td");
+        const countBadge = document.createElement("span");
+
+        countBadge.className =
+            count > 1 ? "repeat-badge" : "normal-badge";
+
+        countBadge.textContent =
+            matrik ? `${count} times` : "-";
+
+        countTd.appendChild(countBadge);
+        tr.appendChild(countTd);
+
+        const actionTd = document.createElement("td");
+        const button = document.createElement("button");
+
+        button.id = "expand-" + index;
+        button.className = "expand-btn";
+        button.textContent = "+ Expand";
+        button.onclick = () => toggleDetails(index);
+
+        actionTd.appendChild(button);
+        tr.appendChild(actionTd);
+
+        body.appendChild(tr);
+
+        // Expanded detail row
+        const detailRow = document.createElement("tr");
+        detailRow.id = "detail-" + index;
+        detailRow.className = "detail-row";
+
+        const detailCell = document.createElement("td");
+        detailCell.colSpan = summaryHeaders.length;
+        detailCell.className = "detail-container";
+
+        const grid = document.createElement("div");
+        grid.className = "detail-grid";
+
+        tableHeaders.forEach(header => {
+            const item = document.createElement("div");
+            item.className = "detail-item";
+
+            const label = document.createElement("span");
+            label.className = "detail-label";
+            label.textContent = header || "Unnamed Column";
+
+            item.appendChild(label);
+            item.appendChild(
+                createDetailValue(header, row[header])
+            );
+
+            grid.appendChild(item);
+        });
+
+        // Show weekly meal selection
+const mealDetails = createMealSelectionDetails(
+    row["Meal Selection"]
+);
+
+mealDetails.style.gridColumn = "1 / -1";
+
+grid.appendChild(mealDetails);
+        // Show normalized Matrik and repeat count too
+        const normalizedItem = document.createElement("div");
+        normalizedItem.className = "detail-item";
+
+        const normalizedLabel = document.createElement("span");
+        normalizedLabel.className = "detail-label";
+        normalizedLabel.textContent = "Normalized Matrik Number";
+
+        normalizedItem.appendChild(normalizedLabel);
+
+        const normalizedValue = document.createElement("div");
+        normalizedValue.className = "detail-value";
+        normalizedValue.textContent = matrik || "-";
+
+        normalizedItem.appendChild(normalizedValue);
+        grid.appendChild(normalizedItem);
+
+        detailCell.appendChild(grid);
+        detailRow.appendChild(detailCell);
+
+        body.appendChild(detailRow);
+    });
+}
+
+
+
+    </script>
+</body>
+</html>
